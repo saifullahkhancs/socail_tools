@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0d1117;
+  color: #e6edf3;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #161b22;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* File input hide default */
+input[type='file'] {
+  display: none;
+}
+
+/* Video player custom */
+video {
+  border-radius: 8px;
+  background: #000;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Platform gradient buttons */
+.btn-instagram {
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+/* Glow effects */
+.glow-purple {
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #21262d 25%, #30363d 50%, #21262d 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Status badge pulse */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-posting {
+  animation: statusPulse 1.5s ease-in-out infinite;
+}

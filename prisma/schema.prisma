@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  caption     String
+  hashtags    String   @default("")
+  videoPath   String
+  videoUrl    String
+  thumbnail   String   @default("")
+  platforms   String   // JSON array: ["youtube","instagram","tiktok"]
+  scheduledAt DateTime
+  status      String   @default("pending") // pending | posting | posted | failed | cancelled
+  youtubeTitle String  @default("")
+  instagramCaption String @default("")
+  tiktokCaption String @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  results     PostResult[]
+}
+
+model PostResult {
+  id         String   @id @default(cuid())
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  platform   String   // youtube | instagram | tiktok
+  status     String   // pending | success | failed
+  platformId String   @default("") // video ID from the platform after posting
+  platformUrl String  @default("") // link to the posted video
+  error      String   @default("")
+  postedAt   DateTime?
+}
+
+model PlatformConnection {
+  id           String   @id @default(cuid())
+  platform     String   @unique // youtube | instagram | tiktok
+  accessToken  String
+  refreshToken String   @default("")
+  expiresAt    DateTime?
+  accountName  String   @default("")
+  accountId    String   @default("")
+  extraData    String   @default("") // JSON for platform-specific data (e.g. Instagram page ID)
+  updatedAt    DateTime @updatedAt
+}
