@@ -55,6 +55,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    ```
 6. In Settings, click **Connect YouTube Shorts**
 
+> A Google API key is not used to upload videos. Uploads require the OAuth client above and a user grant that includes `youtube.upload`. Also, YouTube forces uploads from unaudited API projects created after July 28, 2020 to **private**, even if the app requests public visibility. An API audit is required to remove that restriction.
+
 **Tips:**
 - Videos should be ≤60 seconds and vertical (9:16 aspect ratio) for Shorts
 - The app automatically adds `#Shorts` to title and description

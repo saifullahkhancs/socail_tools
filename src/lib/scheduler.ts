@@ -64,18 +64,21 @@ async function publishPost(post: {
   console.log(`[Scheduler] Publishing post ID: ${post.id} to platforms: ${platforms.join(', ')}`)
 
   const videoPath = path.join(process.cwd(), 'public', post.videoPath.replace('/uploads/', 'uploads/'))
+  console.log(`[Scheduler][${post.id}] Resolved video path: ${videoPath}`)
 
   // Mark as posting
   await prisma.post.update({
     where: { id: post.id },
     data: { status: 'posting' },
   })
+  console.log(`[Scheduler][${post.id}] Status changed to posting`)
 
   // Create result records for each platform (skip if already exists)
   for (const p of platforms) {
     const existing = await prisma.postResult.findFirst({ where: { postId: post.id, platform: p } })
     if (!existing) {
       await prisma.postResult.create({ data: { postId: post.id, platform: p, status: 'pending' } })
+      console.log(`[Scheduler][${post.id}] Created ${p} job result record`)
     }
   }
 
@@ -89,10 +92,19 @@ async function publishPost(post: {
       })
 
       if (!connection) {
-        await updateResult(post.id, platform, 'failed', '', '', `Account for ${platform} is not connected.`)
+        const error = `Account for ${platform} is not connected. Go to Settings and connect the account before scheduling a job.`
+        console.error(`[Scheduler][${post.id}] ${error}`)
+        await updateResult(post.id, platform, 'failed', '', '', error)
         allSuccess = false
         continue
       }
+
+      console.log(`[Scheduler][${post.id}] Found ${platform} connection`, {
+        accountId: connection.accountId || '(not returned by platform)',
+        hasAccessToken: Boolean(connection.accessToken),
+        hasRefreshToken: Boolean(connection.refreshToken),
+        tokenExpiresAt: connection.expiresAt?.toISOString() ?? null,
+      })
 
       let platformId = ''
       let platformUrl = ''
@@ -108,6 +120,19 @@ async function publishPost(post: {
           description: ytDesc,
           accessToken: connection.accessToken,
           refreshToken: connection.refreshToken || undefined,
+          onTokens: (tokens) => {
+            // Google rotates access tokens; persisting them prevents the next scheduled job from using an expired token.
+            void prisma.platformConnection.update({
+              where: { platform: 'youtube' },
+              data: {
+                accessToken: tokens.access_token || connection.accessToken,
+                refreshToken: tokens.refresh_token || connection.refreshToken,
+                expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : connection.expiresAt,
+              },
+            }).catch((tokenError) => {
+              console.error(`[Scheduler][${post.id}] Could not save refreshed YouTube token`, tokenError)
+            })
+          },
         })
         platformId = result.videoId
         platformUrl = result.videoUrl
@@ -154,6 +179,7 @@ async function publishPost(post: {
     where: { id: post.id },
     data: { status: allSuccess ? 'posted' : 'failed' },
   })
+  console.log(`[Scheduler][${post.id}] Job complete with status: ${allSuccess ? 'posted' : 'failed'}`)
 }
 
 async function updateResult(
